@@ -136,7 +136,7 @@ public class Issue336Test implements LG4JLoggable {
         Map<String, Channel<?>> schema = Map.of("VALUE", Channels.appender(ArrayList::new));
         var auditHook = new AuditHook<State>();
 
-        var workflow = new StateGraph<State>(schema, State::new)
+        var workflow = new StateGraph<>(schema, State::new)
                 .addAfterCallNodeHook(auditHook)
                 .addNode("streaming_node", createStreamingNode("streaming_node", List.of("Hello", " ", "World")))
                 .addEdge(START, "streaming_node")
