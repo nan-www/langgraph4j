@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.bsc.langgraph4j.StateGraph.END;
 import static org.bsc.langgraph4j.StateGraph.START;
+import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -40,6 +42,10 @@ public class Issue336Test implements LG4JLoggable {
 
         List<String> values() {
             return this.<List<String>>value("VALUE").orElseThrow();
+        }
+
+        Optional<String> auditHook() {
+            return value("AuditHook" );
         }
     }
 
@@ -63,7 +69,7 @@ public class Issue336Test implements LG4JLoggable {
             capturedResult.set(result);
             callCount.incrementAndGet();
 
-            return completedFuture(result);
+            return completedFuture( mergeMap(result, Map.of("AuditHook", "called")));
         }
 
     }
@@ -100,10 +106,10 @@ public class Issue336Test implements LG4JLoggable {
     @Test
     public void testBlockingNodeAfterHookCalledImmediately() throws Exception {
         // Given
-        Map<String, Channel<?>> schema = Map.of("VALUE", Channels.appender(ArrayList::new));
-        var auditHook = new AuditHook<State>();
+        final Map<String, Channel<?>> schema = Map.of("VALUE", Channels.appender(ArrayList::new));
+        final var auditHook = new AuditHook<State>();
 
-        var workflow = new StateGraph<State>(schema, State::new)
+        var workflow = new StateGraph<>(schema, State::new)
                 .addAfterCallNodeHook(auditHook)
                 .addNode("blocking_node", createBlockingNode( "test_value"))
                 .addEdge(START, "blocking_node")
@@ -111,10 +117,12 @@ public class Issue336Test implements LG4JLoggable {
                 .compile();
 
         // When
-        var result = workflow.invoke(Map.of());
+        final var result = workflow.invoke( GraphInput.noArgs(), RunnableConfig.builder().build());
 
         // Then
         assertTrue(result.isPresent());
+        assertTrue(result.get().auditHook().isPresent());
+        assertEquals( "called", result.get().auditHook().get());
         assertEquals(1, auditHook.callCount.get());
         assertEquals("blocking_node", auditHook.calledAtNode.get());
         assertNotNull(auditHook.capturedResult.get());
@@ -136,19 +144,24 @@ public class Issue336Test implements LG4JLoggable {
                 .compile();
 
         // When - consume the streaming generator
-        var stream = workflow.stream(Map.of(), RunnableConfig.builder().build());
+        var stream = workflow.stream(GraphInput.noArgs(), RunnableConfig.builder().build());
 
         // Consume all streaming output
         List<String> streamingChunks = new ArrayList<>();
         for (var output : stream) {
             if (output instanceof StreamingOutput<?> streamingOutput) {
                 log.info("Streaming chunk output {}", streamingOutput.chunk());
-                streamingChunks.add((String) streamingOutput.chunk());
+                streamingChunks.add(streamingOutput.chunk());
             }
         }
 
+        final var result = GraphResult.from(stream);
+        assertFalse( result.isEmpty() );
+        assertTrue( result.isStateData() );
+        assertEquals( "called", result.asStateData().get("AuditHook"));
+
         // Then - verify streaming completed and AfterHook was called with final result
-        assertEquals(List.of("Hello", " ", "World"), streamingChunks);
+        assertIterableEquals(List.of("Hello", " ", "World"), streamingChunks);
         assertEquals(1, auditHook.callCount.get());
         assertEquals("streaming_node", auditHook.calledAtNode.get());
         assertNotNull(auditHook.capturedResult.get());
@@ -171,7 +184,7 @@ public class Issue336Test implements LG4JLoggable {
         Map<String, Channel<?>> schema = Map.of("VALUE", Channels.appender(ArrayList::new));
         var auditHook = new AuditHook<State>();
 
-        var workflow = new StateGraph<State>(schema, State::new)
+        var workflow = new StateGraph<>(schema, State::new)
                 .addAfterCallNodeHook(auditHook)
                 .addNode("blocking_node", createBlockingNode("blocking_result"))
                 .addNode("streaming_node", createStreamingNode("streaming_node", List.of("A", "B", "C")))
@@ -188,11 +201,16 @@ public class Issue336Test implements LG4JLoggable {
         for (var output : stream) {
             if (output instanceof StreamingOutput<?> streamingOutput) {
                 log.info("Streaming chunk output {}", streamingOutput.chunk());
-                streamingChunks.add((String) streamingOutput.chunk());
+                streamingChunks.add(streamingOutput.chunk());
             }
             log.info("Node ID {}", output.node());
             lastNode = output.node();
         }
+
+        final var result = GraphResult.from(stream);
+        assertFalse( result.isEmpty() );
+        assertTrue( result.isStateData() );
+        assertEquals( "called", result.asStateData().get("AuditHook"));
 
         // Then
         assertEquals(END, lastNode);
