@@ -18,7 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class CallModelConversationMemoryStrategyTest {
+class CallModelConversationContextPolicyTest {
 
     private static class TestState extends MessagesState<ChatMessage> {
         TestState(Map<String, Object> initData) {
@@ -43,7 +43,7 @@ class CallModelConversationMemoryStrategyTest {
     }
 
     @Test
-    void shouldUseAllGraphMessagesWhenStrategyIsNotConfigured() {
+    void shouldUseAllGraphMessagesWhenPolicyIsNotConfigured() {
         var chatModel = new CapturingChatModel();
         var builder = new TestBuilder()
                 .chatModel(chatModel)
@@ -65,13 +65,13 @@ class CallModelConversationMemoryStrategyTest {
     }
 
     @Test
-    void shouldApplyConversationMemoryStrategyWhenConfigured() {
+    void shouldApplyConversationContextPolicyWhenConfigured() {
         var chatModel = new CapturingChatModel();
-        var strategy = new MessageWindowConversationMemoryStrategy(2);
+        var strategy = new MessageWindowConversationContextPolicy(2);
         var builder = new TestBuilder()
                 .chatModel(chatModel)
                 .systemMessage(SystemMessage.from("system"))
-                .conversationMemoryStrategy(strategy);
+                .conversationContextPolicy(strategy);
 
         var callModel = new CallModel<>(builder);
         var graphMessages = List.of(

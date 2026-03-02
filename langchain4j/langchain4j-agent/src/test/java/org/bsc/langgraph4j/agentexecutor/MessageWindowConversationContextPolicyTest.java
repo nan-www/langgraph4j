@@ -14,11 +14,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class MessageWindowConversationMemoryStrategyTest {
+class MessageWindowConversationContextPolicyTest {
 
     @Test
     void shouldKeepMostRecentMessagesWithinWindow() {
-        var strategy = new MessageWindowConversationMemoryStrategy(3);
+        var strategy = new MessageWindowConversationContextPolicy(3);
         List<ChatMessage> messages = List.of(
                 UserMessage.from("m1"),
                 UserMessage.from("m2"),
@@ -37,7 +37,7 @@ class MessageWindowConversationMemoryStrategyTest {
 
     @Test
     void shouldPreserveLeadingSystemMessageWhenEvicting() {
-        var strategy = new MessageWindowConversationMemoryStrategy(2);
+        var strategy = new MessageWindowConversationContextPolicy(2);
         var messages = List.of(
                 SystemMessage.from("system"),
                 UserMessage.from("m1"),
@@ -54,7 +54,7 @@ class MessageWindowConversationMemoryStrategyTest {
 
     @Test
     void shouldRemoveOrphanToolResultsWhenEvictingAiToolRequest() {
-        var strategy = new MessageWindowConversationMemoryStrategy(1);
+        var strategy = new MessageWindowConversationContextPolicy(1);
         var toolRequest = ToolExecutionRequest.builder()
                 .id("id-1")
                 .name("test_tool")
@@ -76,7 +76,7 @@ class MessageWindowConversationMemoryStrategyTest {
 
     @Test
     void shouldNotMutateInputMessages() {
-        var strategy = new MessageWindowConversationMemoryStrategy(2);
+        var strategy = new MessageWindowConversationContextPolicy(2);
         List<ChatMessage> original = new ArrayList<>(List.of(
                 UserMessage.from("m1"),
                 UserMessage.from("m2"),
@@ -93,6 +93,6 @@ class MessageWindowConversationMemoryStrategyTest {
 
     @Test
     void shouldFailForNonPositiveWindowSize() {
-        assertThrows(IllegalArgumentException.class, () -> new MessageWindowConversationMemoryStrategy(0));
+        assertThrows(IllegalArgumentException.class, () -> new MessageWindowConversationContextPolicy(0));
     }
 }

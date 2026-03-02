@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Sliding-window conversation memory strategy that keeps at most {@code maxMessages}
+ * Sliding-window conversation context policy that keeps at most {@code maxMessages}
  * graph messages.
  *
  * Patterned after the MessageWindowChatMemory from langchain4j
@@ -19,11 +19,11 @@ import java.util.Objects;
  * If an evicted {@link AiMessage} contains tool execution requests, following
  * orphan {@link ToolExecutionResultMessage}s are evicted as well.</p>
  */
-public class MessageWindowConversationMemoryStrategy implements ConversationMemoryStrategy {
+public class MessageWindowConversationContextPolicy implements ConversationContextPolicy {
 
     private final int maxMessages;
 
-    public MessageWindowConversationMemoryStrategy(int maxMessages) {
+    public MessageWindowConversationContextPolicy(int maxMessages) {
         if (maxMessages < 1) {
             throw new IllegalArgumentException("maxMessages must be greater than 0");
         }
