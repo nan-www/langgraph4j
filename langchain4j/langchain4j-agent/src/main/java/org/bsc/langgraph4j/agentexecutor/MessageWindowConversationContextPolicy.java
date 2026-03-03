@@ -4,10 +4,14 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import org.bsc.langgraph4j.RunnableConfig;
+import org.bsc.langgraph4j.agent.ConversationContextPolicy;
+import org.bsc.langgraph4j.prebuilt.MessagesState;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Sliding-window conversation context policy that keeps at most {@code maxMessages}
@@ -19,7 +23,7 @@ import java.util.Objects;
  * If an evicted {@link AiMessage} contains tool execution requests, following
  * orphan {@link ToolExecutionResultMessage}s are evicted as well.</p>
  */
-public class MessageWindowConversationContextPolicy implements ConversationContextPolicy {
+public class MessageWindowConversationContextPolicy implements ConversationContextPolicy<ChatMessage> {
 
     private final int maxMessages;
 
@@ -35,27 +39,26 @@ public class MessageWindowConversationContextPolicy implements ConversationConte
     }
 
     @Override
-    public List<ChatMessage> filter(List<ChatMessage> graphMessages) {
-        Objects.requireNonNull(graphMessages, "graphMessages cannot be null");
-        var filtered = new LinkedList<>(graphMessages);
-        ensureCapacity(filtered, maxMessages);
-        return filtered;
+    public <S extends MessagesState<ChatMessage>> List<ChatMessage> filter(S state, RunnableConfig config) {
+        return ensureCapacity(  state.messages(), maxMessages);
     }
 
-    private static void ensureCapacity(List<ChatMessage> messages, int maxMessages) {
-        while (messages.size() > maxMessages) {
-            int messageToEvictIndex = 0;
-            if (messages.get(0) instanceof SystemMessage) {
-                messageToEvictIndex = 1;
-            }
+    private static List<ChatMessage> ensureCapacity(List<ChatMessage> sourceMessages, int maxMessages) {
+        final var filtered = new LinkedList<>(sourceMessages);
 
-            ChatMessage evictedMessage = messages.remove(messageToEvictIndex);
+        while (filtered.size() > maxMessages) {
+            final int messageToEvictIndex = (filtered.get(0) instanceof SystemMessage) ? 1 : 0 ;
+
+            final var evictedMessage = filtered.remove(messageToEvictIndex);
             if (evictedMessage instanceof AiMessage aiMessage && aiMessage.hasToolExecutionRequests()) {
-                while (messages.size() > messageToEvictIndex
-                        && messages.get(messageToEvictIndex) instanceof ToolExecutionResultMessage) {
-                    messages.remove(messageToEvictIndex);
+
+                while (filtered.size() > messageToEvictIndex
+                        && filtered.get(messageToEvictIndex) instanceof ToolExecutionResultMessage) {
+                    filtered.remove(messageToEvictIndex);
                 }
             }
         }
+        return filtered;
     }
+
 }
