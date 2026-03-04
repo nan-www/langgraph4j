@@ -31,7 +31,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.stream.Collectors.toList;
 import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 /**
