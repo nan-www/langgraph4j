@@ -2,20 +2,6 @@
 
 
 
-<!-- "name: Unreleased" is a release tag -->
-
-## [Unreleased](https://github.com/bsorrentino/langgraph4j/releases/tag/Unreleased) ()
-
-
-
-
-
-
-
-
-
-
-
 <!-- "name: v1.8.7" is a release tag -->
 
 ## [v1.8.7](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.8.7) (2026-03-05)
