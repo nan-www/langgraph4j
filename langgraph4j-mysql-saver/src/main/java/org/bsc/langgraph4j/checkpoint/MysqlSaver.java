@@ -75,15 +75,17 @@ public class MysqlSaver extends MemorySaver {
 
     private static final String CREATE_CHECKPOINT_TABLE = """
             CREATE TABLE IF NOT EXISTS LANGRAPH4J_CHECKPOINT (
+               id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE KEY,
                checkpoint_id VARCHAR(36) PRIMARY KEY,
                thread_id VARCHAR(36) NOT NULL,
                node_id VARCHAR(255),
                next_node_id VARCHAR(255),
                state_data JSON NOT NULL,
                saved_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
-
+                
+            
                CONSTRAINT LANGRAPH4J_FK_THREAD
-                   FOREIGN KEY(thread_id)
+                   FOREIGN KEY (thread_id)
                    REFERENCES LANGRAPH4J_THREAD(thread_id)
                    ON DELETE CASCADE
             )""";
@@ -124,7 +126,7 @@ public class MysqlSaver extends MemorySaver {
             FROM LANGRAPH4J_CHECKPOINT c
               INNER JOIN LANGRAPH4J_THREAD t ON c.thread_id = t.thread_id
             WHERE t.thread_name = ? AND t.is_released != TRUE
-            ORDER BY c.saved_at DESC
+            ORDER BY c.saved_at DESC, c.id DESC
             """;
 
     private static final String DELETE_CHECKPOINTS = """
