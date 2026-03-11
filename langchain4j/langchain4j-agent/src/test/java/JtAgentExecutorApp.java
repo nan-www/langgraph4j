@@ -1,5 +1,5 @@
-//DEPS org.bsc.langgraph4j:langgraph4j-agent-executor:1.8.7
-//DEPS org.bsc.langgraph4j:langgraph4j-javelit:1.8.7
+//DEPS org.bsc.langgraph4j:langgraph4j-agent-executor:1.8.8
+//DEPS org.bsc.langgraph4j:langgraph4j-javelit:1.8.8
 //DEPS net.sourceforge.plantuml:plantuml-mit:1.2025.10
 //DEPS dev.langchain4j:langchain4j-bom:1.9.1@pom
 //DEPS dev.langchain4j:langchain4j-github-models
@@ -54,7 +54,7 @@ public class JtAgentExecutorApp {
                 .value(false)
                 .use();
 
-        Jt.divider("hr1").use();
+        Jt.divider().use();
 
         if (modelOptional.isEmpty()) return;
 
@@ -76,7 +76,7 @@ public class JtAgentExecutorApp {
                                 false))
                         .ifPresent(cb -> {
                             cb.use();
-                            Jt.divider("plantuml-divider").use();
+                            Jt.divider().use();
                         });
             }
 

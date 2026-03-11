@@ -1,5 +1,5 @@
-//DEPS org.bsc.langgraph4j:langgraph4j-springai-agentexecutor:1.8.7
-//DEPS org.bsc.langgraph4j:langgraph4j-javelit:1.8.7
+//DEPS org.bsc.langgraph4j:langgraph4j-springai-agentexecutor:1.8.8
+//DEPS org.bsc.langgraph4j:langgraph4j-javelit:1.8.8
 //DEPS net.sourceforge.plantuml:plantuml-mit:1.2025.10
 //DEPS org.springframework.ai:spring-ai-bom:1.1.0@pom
 //DEPS org.springframework.ai:spring-ai-client-chat
@@ -56,7 +56,7 @@ public class JtAgentExecutorApp {
         var modelOptional = JtSelectAiModel.get();
         var streaming = Jt.toggle("Streaming output").value(false).use();
 
-        Jt.divider("hr1").use();
+        Jt.divider().use();
 
         if (modelOptional.isEmpty()) return;
 
@@ -78,7 +78,7 @@ public class JtAgentExecutorApp {
                         false))
                 .ifPresent(cb -> {
                     cb.use();
-                    Jt.divider("plantuml-divider").use();
+                    Jt.divider().use();
                 });
             }
 
